@@ -1,0 +1,2 @@
+# Don't commit any inventory files used during testing
+inventory
