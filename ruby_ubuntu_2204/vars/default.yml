@@ -1,0 +1,5 @@
+---
+ruby_version: 3.1.2
+ruby_full_version: ruby 3.1.2p20
+ruby_source_url: "https://cache.ruby-lang.org/pub/ruby/3.1/ruby-{{ ruby_version }}.tar.gz"
+ruby_source_sha: sha256:61843112389f02b735428b53bb64cf988ad9fb81858b8248e22e57336f24a83e

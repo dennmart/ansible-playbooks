@@ -1,0 +1,64 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Check if Ruby is installed
+      ansible.builtin.shell: ruby -v | cut -d ' ' -f 1-2
+      register: installed_ruby_version
+      changed_when: false
+
+    - name: End play if Ruby is already installed
+      ansible.builtin.meta: end_play
+      when: installed_ruby_version.stdout == ruby_full_version
+
+    - name: Install prerequisites for Ruby
+      ansible.builtin.apt:
+        name:
+          - autoconf
+          - bison
+          - patch
+          - build-essential
+          - rustc
+          - libssl-dev
+          - libyaml-dev
+          - libreadline6-dev
+          - zlib1g-dev
+          - libgmp-dev
+          - libncurses5-dev
+          - libffi-dev
+          - libgdbm6
+          - libgdbm-dev
+          - libdb-dev
+          - uuid-dev
+        update_cache: yes
+        state: present
+
+    - name: Download Ruby source
+      ansible.builtin.get_url:
+        url: "{{ ruby_source_url }}"
+        dest: "{{ ansible_env.HOME }}/ruby-{{ ruby_version }}.tar.gz"
+        checksum: "{{ ruby_source_sha }}"
+
+    - name: Ensure directory to unpack Ruby source exists
+      file:
+        path: "{{ ansible_env.HOME }}/ruby-{{ ruby_version }}"
+        state: directory
+
+    - name: Unpack Ruby source
+      ansible.builtin.unarchive:
+        src: "{{ ansible_env.HOME }}/ruby-{{ ruby_version }}.tar.gz"
+        dest: "{{ ansible_env.HOME }}"
+        remote_src: yes
+        creates: "{{ ansible_env.HOME }}/ruby-{{ ruby_version }}/configure"
+
+    - name: Build Ruby from source
+      ansible.builtin.command:
+        chdir: "{{ ansible_env.HOME }}/ruby-{{ ruby_version }}"
+        cmd: "{{ item }}"
+      with_items:
+        - "./configure"
+        - make
+        - make install
