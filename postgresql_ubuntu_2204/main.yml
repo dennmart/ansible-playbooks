@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - gnupg
+        update_cache: yes
+        state: present
+
+    - name: Import Postgres repo key
+      ansible.builtin.apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+
+    - name: Get current release codename
+      ansible.builtin.command: lsb_release -cs
+      register: release_codename
+      changed_when: false
+
+    - name: Set up Postgres Apt repository
+      ansible.builtin.apt_repository:
+        filename: pgdg
+        repo: "deb http://apt.postgresql.org/pub/repos/apt {{ release_codename.stdout }}-pgdg main"
+        state: present
+
+    - name: Install Postgres
+      ansible.builtin.apt:
+        name:
+          - postgresql
+        update_cache: yes
+        state: present
+
+    - name: Start Postgres server
+      ansible.builtin.service:
+        name: postgresql
+        state: started
